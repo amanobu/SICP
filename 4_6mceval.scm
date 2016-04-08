@@ -1,7 +1,10 @@
-;; Šî”Õ‚Ì apply ‚Ö‚ÌQÆ‚ğ apply-in-underlying-scheme ‚Ö‘Ş”ğ‚³‚¹‚éi‚±‚¤‚·‚é‚±‚Æ‚ÅAŠî”Õ‚Ì apply ‚É apply-in-underlying-scheme ‚Æ‚¢‚¤–¼‘O‚ÅƒAƒNƒZƒX‚Å‚«‚éjB
+;;ã“ã‚ŒãŒãªã„ã¨ã„ã‚ã„ã‚å‹•ã‹ãªã„
+(define true #t)
+(define false #f)
+
 (define apply-in-underlying-scheme apply)
 
-;;;; apply ‚Ì’è‹`
+;;;; apply ã®å®šç¾©
 (define (apply procedure arguments)
   (cond ((primitive-procedure? procedure)
          (apply-primitive-procedure procedure arguments))
@@ -16,7 +19,7 @@
           (error
             "Unknown procedure type -- APPLY" procedure))))
 
-;;;; eval ‚Ì’è‹`
+;;;; eval ã®å®šç¾©
 (define (eval exp env)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
@@ -26,7 +29,7 @@
         ((and? exp) (eval-and exp env))
         ((or? exp) (eval-or exp env))
         ((if? exp) (eval-if exp env))
-        ((let? exp) (let->combination exp env))
+        ((let? exp) (eval (let->combination exp) env))
         ((lambda? exp)
          (make-procedure (lambda-parameters exp)
                          (lambda-body exp)
@@ -40,7 +43,7 @@
         (else
           (error "Unknown expression type -- EVAL" exp))))
 
-;;;; è‘±‚«‚Ìˆø”
+;;;; æ‰‹ç¶šãã®å¼•æ•°
 (define (list-of-values exps env)
   (if (no-operands? exps)
       '()
@@ -64,19 +67,19 @@
 (define (or? exp) (tagged-list? exp 'or))
   
 
-;;;; ğŒ®
+;;;; æ¡ä»¶å¼
 (define (eval-if exp env)
   (if (true? (eval (if-predicate exp) env))
       (eval (if-consequent exp) env)
       (eval (if-alternative exp) env)))
 
-;;;; •À‚Ñ
+;;;; ä¸¦ã³
 (define (eval-sequence exps env)
   (cond ((last-exp? exps) (eval (first-exp exps) env))
         (else (eval (first-exp exps) env)
               (eval-sequence (rest-exps exps) env))))
 
-;;;; ‘ã“ü‚Æ’è‹`
+;;;; ä»£å…¥ã¨å®šç¾©
 (define (eval-assignment exp env)
   (set-variable-value! (assignment-variable exp)
                        (eval (assignment-value exp) env)
@@ -89,18 +92,18 @@
                     env)
   'ok)
 
-;;;; 4.1.2 ®‚Ì•\Œ»
+;;;; 4.1.2 å¼ã®è¡¨ç¾
 
-;;;; ©ŒÈ•]‰¿®‚Í”‚Æ•¶š‚¾‚¯
+;;;; è‡ªå·±è©•ä¾¡å¼ã¯æ•°ã¨æ–‡å­—ã ã‘
 (define (self-evaluating? exp)
   (cond ((number? exp) #t)
         ((string? exp) #t)
         (else #f)))
 
-;;;; •Ï”‚Í‹L†‚Å•\Œ»
+;;;; å¤‰æ•°ã¯è¨˜å·ã§è¡¨ç¾
 (define (variable? exp) (symbol? exp))
 
-;;;; ƒNƒH[ƒg®‚Í (quote <text-of-quotation>) ‚ÌŒ`
+;;;; ã‚¯ã‚©ãƒ¼ãƒˆå¼ã¯ (quote <text-of-quotation>) ã®å½¢
 (define (quoted? exp)
   (tagged-list? exp 'quote))
 
@@ -111,7 +114,7 @@
       (eq? (car exp) tag)
       #f))
 
-;;;; ‘ã“ü‚Í (set! <var> <value>) ‚ÌŒ`
+;;;; ä»£å…¥ã¯ (set! <var> <value>) ã®å½¢
 (define (assignment? exp)
   (tagged-list? exp 'set!))
 
@@ -119,7 +122,7 @@
 
 (define (assignment-value exp) (caddr exp))
 
-;;;; ’è‹`
+;;;; å®šç¾©
 (define (definition? exp)
   (tagged-list? exp 'define))
 
@@ -131,10 +134,10 @@
 (define (definition-value exp)
   (if (symbol? (cadr exp))
       (caddr exp)
-      (make-lambda (cdadr exp)      ; ‰¼ƒpƒ‰ƒƒ^
-                   (cddr exp))))    ; –{‘Ì
+      (make-lambda (cdadr exp)      ; ä»®ãƒ‘ãƒ©ãƒ¡ã‚¿
+                   (cddr exp))))    ; æœ¬ä½“
 
-;;;; lambda ®‚Í‹L† lambda ‚Ån‚Ü‚éƒŠƒXƒg
+;;;; lambda å¼ã¯è¨˜å· lambda ã§å§‹ã¾ã‚‹ãƒªã‚¹ãƒˆ
 (define (lambda? exp) (tagged-list? exp 'lambda))
 
 (define (lambda-parameters exp) (cadr exp))
@@ -143,25 +146,32 @@
 
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
-;;;;4.6
-;; (define x '(let (
-;;       (val1 (func1))
-;;       (val2 (func2))
-;;       )
-;;   (body)))
-;; (car x)
 
-;;(let ((x (+ 2 2))) (+ x x))
+
+;;;4.6start
+;;(let ((var1 (func1)) (var2 (func2))) (body) )
+;;(let (( x (+ 2 2))) (+ x x))
 (define (let? exp) (tagged-list? exp 'let))
-(define (let->combination exp env)
-  (if (null? (car exp))
-      '()
-      (
-       (make-lambda (map car (cadr exp)) (cddr exp))
-       (map cdr (cadr exp))
-       )
-      )
-  )
+;;;letã®å¤‰æ•°ä¸€è¦§
+(define (let->combination exp)
+;; (display (let-params exp))(newline)
+;; (display (let-body exp))(newline)
+;; (display (let-funcs exp))(newline)
+  (display (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp)))(newline)
+  (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp)))
+
+;;;let ã®å¤‰æ•°ä¸€è¦§
+(define (let-vars exp)
+  (cadr exp))
+;;;letã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+(define (let-params exp)
+  (map cadr (let-vars exp)))
+;;;letã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã«è©²å½“ã™ã‚‹å€¤
+(define (let-funcs exp)
+  (map cadr (let-vars exp)))
+;;;letã®body
+(define (let-body exp)
+  (cddr exp))
   
 (define (if? exp) (tagged-list? exp 'if))
 
@@ -195,7 +205,7 @@
 
 (define (make-begin seq) (cons 'begin seq))
 
-;;;; è‘±‚«ì—p
+;;;; æ‰‹ç¶šãä½œç”¨
 (define (application? exp) (pair? exp))
 
 (define (operator exp) (car exp))
@@ -208,7 +218,7 @@
 
 (define (rest-operands ops) (cdr ops))
 
-;;;; cond ®
+;;;; cond å¼
 (define (cond? exp) (tagged-list? exp 'cond))
 
 (define (cond-clauses exp) (cdr exp))
@@ -237,16 +247,16 @@
                         (sequence->exp (cond-actions first))
                         (expand-clauses rest))))))
 
-;;;; 4.1.3 •]‰¿Ší‚Ìƒf[ƒ^\‘¢
+;;;; 4.1.3 è©•ä¾¡å™¨ã®ãƒ‡ãƒ¼ã‚¿æ§‹é€ 
 
-;;;; qŒê‚ÌƒeƒXƒg
+;;;; è¿°èªã®ãƒ†ã‚¹ãƒˆ
 (define (true? x)
   (not (eq? x #f)))
 
 (define (false? x)
   (eq? x #f))
 
-;;;; è‘±‚«‚Ì•\Œ»
+;;;; æ‰‹ç¶šãã®è¡¨ç¾
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 
@@ -259,7 +269,7 @@
 
 (define (procedure-environment p) (cadddr p))
 
-;;;; ŠÂ‹«‚É‘Î‚·‚é‘€ì
+;;;; ç’°å¢ƒã«å¯¾ã™ã‚‹æ“ä½œ
 (define (enclosing-environment env) (cdr env))
 
 (define (first-frame env) (car env))
@@ -325,7 +335,7 @@
        (scan (frame-variables frame)
              (frame-values frame))))
 
-;;;; 4.1.4 •]‰¿Ší‚ğƒvƒƒOƒ‰ƒ€‚Æ‚µ‚Ä‘–‚ç‚¹‚é
+;;;; 4.1.4 è©•ä¾¡å™¨ã‚’ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã¨ã—ã¦èµ°ã‚‰ã›ã‚‹
 (define primitive-procedures
   (list (list 'car car)
         (list 'cdr cdr)
@@ -333,7 +343,7 @@
         (list 'null? null?)
         (list '+ +)
         (list 'let let)
-        ;; Šî–{è‘±‚«‚ª‘±‚­
+        ;; åŸºæœ¬æ‰‹ç¶šããŒç¶šã
         ))
 
 (define (primitive-procedure-names)
@@ -365,7 +375,7 @@
     (primitive-implementation proc) args))
 
 
-;;;; Šî”Õ‚Ì Lisp ƒVƒXƒeƒ€‚Ì"“Ç‚İ‚İ-•]‰¿-ˆóš"ƒ‹[ƒv‚ğƒ‚ƒfƒ‹‰»‚·‚é"‹ì“®ƒ‹[ƒv(driver loop)"‚ğ—pˆÓ‚·‚éB
+;;;; åŸºç›¤ã® Lisp ã‚·ã‚¹ãƒ†ãƒ ã®"èª­ã¿è¾¼ã¿-è©•ä¾¡-å°å­—"ãƒ«ãƒ¼ãƒ—ã‚’ãƒ¢ãƒ‡ãƒ«åŒ–ã™ã‚‹"é§†å‹•ãƒ«ãƒ¼ãƒ—(driver loop)"ã‚’ç”¨æ„ã™ã‚‹ã€‚
 (define input-prompt ";;; M-Eval input:")
 (define output-prompt ";;; M-Eval value:")
 
