@@ -1,4 +1,3 @@
-;;これがないといろいろ動かない
 (define true #t)
 (define false #f)
 
@@ -21,6 +20,7 @@
 
 ;;;; eval の定義
 (define (eval exp env)
+  (display '=====)(display exp)(newline)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
         ((quoted? exp) (text-of-quotation exp))
@@ -150,22 +150,30 @@
 
 ;;;4.6start
 ;;(let ((var1 (func1)) (var2 (func2))) (body) )
-;;(let (( x (+ 2 2))) (+ x x))
+;;;(define exp '(let (( x (+ 2 2))) (+ x x)))
+;;;(define exp '(let ((a 2) (b 5))(+ (* x a) b)))
 (define (let? exp) (tagged-list? exp 'let))
 ;;;letの変数一覧
 (define (let->combination exp)
-;; (display (let-params exp))(newline)
-;; (display (let-body exp))(newline)
-;; (display (let-funcs exp))(newline)
-  (display (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp)))(newline)
-  (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp)))
+  (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp))
+  ;; (if (no-operands? exp)
+  ;;     '()
+  ;;     (
+  ;;     ;; (display (let-params exp))(newline)
+  ;;     ;; (display (let-body exp))(newline)
+  ;;      ;; (display (let-funcs exp))(newline)
+  ;;      (display (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp)))
+  ;;      (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp))
+  ;;      )
+  ;;     )
+  )
 
 ;;;let の変数一覧
 (define (let-vars exp)
   (cadr exp))
 ;;;letのパラメータ
 (define (let-params exp)
-  (map cadr (let-vars exp)))
+  (map car (let-vars exp)))
 ;;;letのパラメータに該当する値
 (define (let-funcs exp)
   (map cadr (let-vars exp)))
@@ -343,6 +351,7 @@
         (list 'null? null?)
         (list '+ +)
         (list 'let let)
+        (list '* *)
         ;; 基本手続きが続く
         ))
 
