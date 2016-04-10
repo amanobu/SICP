@@ -29,6 +29,7 @@
         ((and? exp) (eval-and exp env))
         ((or? exp) (eval-or exp env))
         ((if? exp) (eval-if exp env))
+        ((let*? exp) (eval (let*->nested-lets exp) env))
         ((let? exp) (eval (let->combination exp) env))
         ((lambda? exp)
          (make-procedure (lambda-parameters exp)
@@ -180,6 +181,22 @@
 ;;;letのbody
 (define (let-body exp)
   (cddr exp))
+
+;;; 4.7 start
+(define (let*? exp) (tagged-list? exp 'let*))
+(define (let*->nested-lets exp)
+  (if (null? exp)
+      '()
+      (let ((let*first exp))
+        (let*->nested-lets (let*after exp)))
+      )
+  )
+(define (let*main exp) (cdr exp))
+(define (let*first exp)
+  (caar (let*main exp)))
+(define (let*after exp)
+  (list 'let*  (cdar (let*main exp)) (cdr (let*main exp))))
+;;; 4.7 end
   
 (define (if? exp) (tagged-list? exp 'if))
 
@@ -352,6 +369,7 @@
         (list '+ +)
         (list 'let let)
         (list '* *)
+        (list 'let* let*)
         ;; 基本手続きが続く
         ))
 
