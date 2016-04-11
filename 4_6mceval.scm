@@ -183,19 +183,22 @@
   (cddr exp))
 
 ;;; 4.7 start
+;;;
+;; (let* ((x 3) (y (+ x 2)) (z (+ x y 5)))(* x z))
+;; ↓
+;; (let ((x 3))   (let ((y (+ x 2)))     (let ((z (+ x y 5)))       (* x z))))
+;; (define exp '(let* ((x 3) (y (+ x 2)) (z (+ x y 5)))(* x z)))
+;; (define clauses '(((x 3) (y (+ x 2)) (z (+ x y 5))) (* x z)))
 (define (let*? exp) (tagged-list? exp 'let*))
+
 (define (let*->nested-lets exp)
-  (if (null? exp)
-      '()
-      (let ((let*first exp))
-        (let*->nested-lets (let*after exp)))
-      )
-  )
-(define (let*main exp) (cdr exp))
-(define (let*first exp)
-  (caar (let*main exp)))
-(define (let*after exp)
-  (list 'let*  (cdar (let*main exp)) (cdr (let*main exp))))
+  (expand-let*-clauses (cadr exp) (cddr exp)))
+
+(define (expand-let*-clauses params body)
+  (if (null? (cdr params))
+      (cons 'let (cons params body))
+      (list 'let (list (car params))
+            (expand-let*-clauses (cdr params) body))))
 ;;; 4.7 end
   
 (define (if? exp) (tagged-list? exp 'if))
