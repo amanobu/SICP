@@ -151,6 +151,8 @@
 
 ;;;4.6start
 ;;(let ((var1 (func1)) (var2 (func2))) (body) )
+;; ↓
+;;((lambda (var1 var2) (body)) (func1) (func2))
 ;;;(define exp '(let (( x (+ 2 2))) (+ x x)))
 ;;;(define exp '(let ((a 2) (b 5))(+ (* x a) b)))
 (define (let? exp) (tagged-list? exp 'let))
@@ -181,6 +183,25 @@
 ;;;letのbody
 (define (let-body exp)
   (cddr exp))
+;; 4.6end
+
+;;; 4.8 start
+;; (define (fib n)
+;; (let fib-iter ((a 1) (b 0) (count n))
+;;   (if (= count 0)
+;;       b
+;;       (fib-iter (+ a b) a (- count 1)))))
+;; ↓
+;; (define (fib n)
+;;   (define (fib-iter a b count)
+;;     (if (= count 0)
+;;         b
+;;         (fib-iter (+ a b) a (- count 1))))
+;;   (fib-iter 1 0 n)
+;;   )
+  
+
+;;; 4.8 end
 
 ;;; 4.7 start
 ;;;
