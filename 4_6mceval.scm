@@ -199,6 +199,26 @@
 ;;         (fib-iter (+ a b) a (- count 1))))
 ;;   (fib-iter 1 0 n)
 ;;   )
+;;(define exp '(let fib-iter ((a 1) (b 0) (count n))   (if (= count 0) b (fib-iter (+ a b) a (- count 1)))))
+
+;;;名前付きlet の変数一覧
+(define (let-named-vars exp)
+  (caddr exp))
+;;;名前付きletのパラメータ
+(define (let-named-params exp)
+  (map car (let-named-vars exp)))
+;;;名前付きletのパラメータの値
+(define (let-named-values exp)
+  (map cadr (let-named-vars exp)))
+;;;名前付きletのbody
+(define (let-named-body exp)
+  (cdddr exp))
+(define (let-name exp)
+  (cadr exp))
+(define (let-name-covert exp)
+   (list 'define (cons (let-name exp) (let-named-params exp)) (let-named-body exp))
+   (list (let-name exp) (let-named-values exp))
+  )
   
 
 ;;; 4.8 end
