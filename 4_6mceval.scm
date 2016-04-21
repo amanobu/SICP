@@ -158,7 +158,10 @@
 (define (let? exp) (tagged-list? exp 'let))
 ;;;letの変数一覧
 (define (let->combination exp)
-  (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp))
+  (if (symbol? (cadr exp))
+      (list 'lambda '() (let-name-convert exp))
+      (cons (make-lambda (let-params exp) (let-body exp)) (let-funcs exp))
+      )
   ;; (if (no-operands? exp)
   ;;     '()
   ;;     (
@@ -212,12 +215,14 @@
   (map cadr (let-named-vars exp)))
 ;;;名前付きletのbody
 (define (let-named-body exp)
-  (cdddr exp))
+  (cadddr exp))
 (define (let-name exp)
   (cadr exp))
-(define (let-name-covert exp)
+(define (let-name-convert exp)
+  (list
    (list 'define (cons (let-name exp) (let-named-params exp)) (let-named-body exp))
-   (list (let-name exp) (let-named-values exp))
+   (cons (let-name exp) (let-named-values exp))
+   )
   )
   
 
